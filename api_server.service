@@ -1,0 +1,26 @@
+[Unit]
+Description=Daemon Test Service
+
+[Service]
+# WorkingDirectory=/home/maxim/PycharmPrijects/venvFastAPI/venv
+ExecStart=/home/maxim/PycharmProjects/venvFastAPI/venv/bin/python3 /home/maxim/PycharmProjects/venvFastAPI/main.py --serve-in-foreground
+
+
+
+# Environment=PYTHONBUFFERED=1
+
+Restart=on-failure
+RestartSec=5
+
+Type=notify
+
+User=root
+
+
+
+[Install]
+
+WantedBy=multi-user.target
+
+
+
