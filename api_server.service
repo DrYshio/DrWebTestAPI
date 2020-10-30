@@ -1,4 +1,5 @@
 [Unit]
+
 Description=Daemon Test HTTP API Service
 
 [Service]
@@ -10,7 +11,7 @@ RestartSec=5
 
 Type=notify
 
-User=root
+User=[username]
 
 [Install]
 

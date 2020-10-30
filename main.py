@@ -1,9 +1,10 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, HTTPException, Response
 import hashlib
-import shutil
 import os
 from starlette.responses import FileResponse
 import uvicorn
+import logging
+from config import *
 
 
 app = FastAPI()
@@ -14,38 +15,56 @@ def delete_directory_if_empty(file_hash):
         os.rmdir(os.path.join('store', file_hash[:2]))
 
 
-@app.post('/files', response_description="File's sha224 hash")
-async def upload(file: UploadFile = File(...)) -> dict:
+@app.post('/files')
+async def upload(file: UploadFile = File(...)) -> Response:
     file_hash = hashlib.sha224(file.filename.encode()).hexdigest()
+    file_type = file.filename.split(sep='.')[1]
 
-    if not os.path.isfile(os.path.join('store', file_hash[:2])):
-        os.mkdir(os.path.join('store', file_hash[:2]))
+    if not os.path.isdir(os.path.join('store', file_hash[:2])):
+        os.makedirs(os.path.join(os.getcwd(), 'store', file_hash[:2]))
 
-    with open(os.path.join('store', file_hash[:2], file_hash), "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    return {"file hash": file_hash}
+    with open(os.path.join('store', file_hash[:2], f'{file_hash}.{file_type}'), "wb") as f:
+        for chunk in iter(lambda: file.file.read(10000), b''):
+            f.write(chunk)
+
+    return Response(f'{file_hash}.{file_type}')
 
 
-@app.delete('/files', response_description="Result of deleting")
-async def delete_file(data: str) -> dict:
+@app.delete('/files')
+async def delete_file(data: str) -> Response or HTTPException:
     if os.path.isfile(os.path.join('store', data[:2], data)):
         os.remove(os.path.join('store', data[:2], data))
-        delete_directory_if_empty(data)
-        return {'response': 'Successful deleted'}
+        delete_directory_if_empty(data.split(sep=".")[0])
+        return Response('File deleted successfully')
     else:
-        return {'response': 'File does not exist.'}
+        raise HTTPException(
+            status_code=404,
+            detail="File not found"
+        )
 
 
-@app.get('/files', response_description='Requested file')
-async def download(data: str) -> FileResponse or dict:
+@app.get('/files')
+async def download(data: str) -> FileResponse or HTTPException:
     if os.path.isfile(os.path.join('store', data[:2], data)):
         return FileResponse(
-            os.path.join('store', data[:2], data),
-            media_type='picture/jpeg',
-            filename='content')
+            path=os.path.join('store', data[:2], data),
+            filename=f'content.{data.split(sep=".")[1]}'
+        )
     else:
-        return {'response': 'File does not exist.'}
+        raise HTTPException(
+            status_code=404,
+            detail="File not found"
+        )
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, port=8000, log_level="info")
+    os.chdir(PATH_TO_WORKING_DIRECTORY)
+    logger = logging.getLogger('DrWeb API')
+    logger.setLevel(logging.DEBUG)
+    fh = logging.FileHandler('app.log')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    logger.debug('The server is running')
+    uvicorn.run(app, port=PORT, log_level="info")
+    logger.debug('the server is down')
