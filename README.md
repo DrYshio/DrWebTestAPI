@@ -19,13 +19,13 @@ Once the server receives a deletion request with the file’s hash, it looks for
 - Python 3.8
 
 ### Installation
-- 'git clone https://github.com/DrYshio/DrWebTestAPI.git'
-- 'pip install requirements.txt'
-- Change variable PATH_TO_WORKING_DIRECTORY in config.py to the path where you need store directory to be created.
-- Change [user] and [path to project directory] in api_server.service
-- Place api_server.service in /etc/systemd/system/
-- '$ systemctl daemon-reload'
-- '$ sudo systemctl restart api_server'
-- (optional) '$ systemctl status api_server'
-- Follow the link 127.0.0.1:8000/docs
+1. `git clone https://github.com/DrYshio/DrWebTestAPI.git`
+2. `pip install requirements.txt`
+3. Change variable PATH_TO_WORKING_DIRECTORY in config.py to the path where you need store directory to be created.
+4. Change [user] and [path to project directory] in api_server.service
+5. Place api_server.service in /etc/systemd/system/
+6. `$ systemctl daemon-reload`
+7. `$ sudo systemctl restart api_server`
+8. (optional) `$ systemctl status api_server`
+9. Follow the link 127.0.0.1:8000/docs
 
